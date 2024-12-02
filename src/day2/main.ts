@@ -90,12 +90,12 @@ function part2() {
 
     let isSafe = checkLevels(levels);
     if (!isSafe) {
-      console.log("Checking if removing a value fixes it");
       for (let i = 0; i < levels.length; i++) {
         const newLevels = [...levels];
         newLevels.splice(i, 1);
         isSafe = checkLevels(newLevels);
         if (isSafe) {
+          console.log(`>> Removing #${i} ${levels[i]} fixes the data`);
           break;
         }
       }
