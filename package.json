@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "day5": "ts-node src/day5/main",
     "day4": "ts-node src/day4/main",
     "day3": "ts-node src/day3/main",
     "day2": "ts-node src/day2/main",
