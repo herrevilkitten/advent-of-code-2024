@@ -34,15 +34,12 @@ function part1() {
 
     let pass = true;
     for (const page of update) {
-      //console.log(`>> Checking ${page}`);
-      //console.log(`>> fail if in ${[...failIfPages]}`);
       scannedPages.add(page);
       if (failIfPages.has(page)) {
         pass = false;
         break;
       }
       const prereqPages = pageOrders.get(page);
-      //      console.log(`>> Prereq for ${page} is ${prereqPages}`);
       if (prereqPages === undefined) {
         continue;
       }
@@ -63,27 +60,63 @@ function part1() {
   console.log(`** Total: ${total}`);
 }
 
-function part2() {
-  let total = 0;
+function failedUpdates() {
+  const failedUpdates: number[][] = [];
   for (const update of updates) {
     const scannedPages = new Set<number>();
     const failIfPages = new Set<number>();
-    let failPoint: number | undefined = undefined;
 
     let pass = true;
+    for (const page of update) {
+      scannedPages.add(page);
+      if (failIfPages.has(page)) {
+        pass = false;
+        break;
+      }
+      const prereqPages = pageOrders.get(page);
+      if (prereqPages === undefined) {
+        continue;
+      }
+      for (const prereq of prereqPages) {
+        if (scannedPages.has(prereq)) {
+          continue;
+        }
+        failIfPages.add(prereq);
+      }
+    }
+    if (!pass) {
+      failedUpdates.push(update);
+    }
+  }
+  return failedUpdates;
+}
+
+function part2() {
+  let total = 0;
+  const failures = failedUpdates();
+  for (const update of failures) {
+    let pass = true;
     do {
+      const scannedPages = new Set<number>();
+      const failIfPages = new Set<number>();
+      const failingReverseMap = new Map<number, number>();
+      pass = true;
       for (let i = 0; i < update.length; ++i) {
         const page = update[i];
-        //console.log(`>> Checking ${page}`);
-        //console.log(`>> fail if in ${[...failIfPages]}`);
         scannedPages.add(page);
         if (failIfPages.has(page)) {
-          failPoint = i;
+          const reverse = failingReverseMap.get(page);
+          if (reverse === undefined) {
+            console.error(`>> No reverse match for ${page}`);
+            return -1;
+          }
+          const temp = update[reverse];
+          update.splice(reverse, 1, page);
+          update.splice(i, 1, temp);
           pass = false;
           break;
         }
         const prereqPages = pageOrders.get(page);
-        //      console.log(`>> Prereq for ${page} is ${prereqPages}`);
         if (prereqPages === undefined) {
           continue;
         }
@@ -92,9 +125,13 @@ function part2() {
             continue;
           }
           failIfPages.add(prereq);
+          failingReverseMap.set(prereq, i);
         }
       }
     } while (!pass);
+    const pages = [...update];
+    const center = Math.floor(pages.length / 2);
+    total = total + pages[center];
   }
   console.log(`** Total: ${total}`);
 }
