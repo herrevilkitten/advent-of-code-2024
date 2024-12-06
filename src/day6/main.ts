@@ -80,8 +80,12 @@ function scanMap(map: string[]) {
     }
   }
 
-  [...obstacleColumns.values()].forEach((rows) => rows.sort());
-  [...obstacleRows.values()].forEach((columns) => columns.sort());
+  [...obstacleColumns.values()].forEach((rows) =>
+    rows.sort((a, b) => Number(a) - Number(b))
+  );
+  [...obstacleRows.values()].forEach((columns) =>
+    columns.sort((a, b) => Number(a) - Number(b))
+  );
 
   console.log(">> Guard:", guard);
   console.log(">> Obstacle count:", obstacleCount);
@@ -119,6 +123,8 @@ function searchColumn(
 ): SearchResult {
   const first = column[0];
   const last = column[column.length - 1];
+
+  console.log(column, guard);
 
   // Above the first obstacle, so heading out
   if (
@@ -168,6 +174,8 @@ function searchColumn(
 function searchRow(row: number[], width: number, guard: Guard) {
   const first = row[0];
   const last = row[row.length - 1];
+
+  console.log(row, guard);
 
   // Above the first obstacle, so heading out
   if (
@@ -235,6 +243,8 @@ function part1() {
   const visited = new Set<string>();
   const data = scanMap(lines);
 
+  //  console.log(data);
+
   let onScreen = true;
   while (onScreen) {
     const result = searchNext(data);
@@ -250,7 +260,7 @@ function part1() {
       data.guard.x = result.next.x;
       data.guard.y = result.next.y;
     }
-//    console.log(result, onScreen);
+    //    console.log(result, onScreen);
     /*
     const row = data.obstacleRows.get(data.guard.y) ?? [];
     const column = data.obstacleColumns.get(data.guard.x) ?? [];
