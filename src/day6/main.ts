@@ -107,6 +107,7 @@ function rowRange(start: number, end: number, y: number) {
 }
 
 interface SearchResult {
+  event: string;
   onScreen: boolean;
   visited: string[];
   next?: {
@@ -124,7 +125,7 @@ function searchColumn(
   const first = column[0];
   const last = column[column.length - 1];
 
-  console.log(column, guard);
+  //  console.log(column, guard);
 
   // Above the first obstacle, so heading out
   if (
@@ -132,6 +133,7 @@ function searchColumn(
     (column.length === 0 || guard.y < first)
   ) {
     return {
+      event: "up-off",
       onScreen: false,
       visited: columnRange(0, guard.y, guard.x),
     };
@@ -143,23 +145,28 @@ function searchColumn(
     (column.length === 0 || guard.y > last)
   ) {
     return {
+      event: "down-off",
       onScreen: false,
       visited: columnRange(guard.y, height, guard.x),
     };
   }
 
   // Between two obstacles
-  for (const point of column) {
+  for (const point of [...column].reverse()) {
     if (guard.direction === Direction.Up && point < guard.y) {
       return {
+        event: "up-stop",
         onScreen: true,
         visited: columnRange(point + 1, guard.y, guard.x),
         next: { direction: Direction.Right, x: guard.x, y: point + 1 },
       };
     }
+  }
 
+  for (const point of column) {
     if (guard.direction === Direction.Down && point > guard.y) {
       return {
+        event: "down-stop",
         onScreen: true,
         visited: columnRange(guard.y, point - 1, guard.x),
         next: { direction: Direction.Left, x: guard.x, y: point - 1 },
@@ -175,7 +182,7 @@ function searchRow(row: number[], width: number, guard: Guard) {
   const first = row[0];
   const last = row[row.length - 1];
 
-  console.log(row, guard);
+  //  console.log(row, guard);
 
   // Above the first obstacle, so heading out
   if (
@@ -183,6 +190,7 @@ function searchRow(row: number[], width: number, guard: Guard) {
     (row.length === 0 || guard.x < first)
   ) {
     return {
+      event: `left-off`,
       onScreen: false,
       visited: rowRange(0, guard.x, guard.y),
     };
@@ -194,23 +202,27 @@ function searchRow(row: number[], width: number, guard: Guard) {
     (row.length === 0 || guard.x > last)
   ) {
     return {
+      event: "right-off",
       onScreen: false,
-      visited: columnRange(guard.x, width, guard.y),
+      visited: rowRange(guard.x, width, guard.y),
     };
   }
 
   // Between two obstacles
-  for (const point of row) {
+  for (const point of [...row].reverse()) {
     if (guard.direction === Direction.Left && point < guard.x) {
       return {
+        event: "left-stop",
         onScreen: true,
         visited: rowRange(point + 1, guard.x, guard.y),
         next: { direction: Direction.Up, x: point + 1, y: guard.y },
       };
     }
-
+  }
+  for (const point of row) {
     if (guard.direction === Direction.Right && point > guard.x) {
       return {
+        event: "right-stop",
         onScreen: true,
         visited: rowRange(guard.x, point - 1, guard.y),
         next: { direction: Direction.Down, x: point - 1, y: guard.y },
@@ -246,6 +258,9 @@ function part1() {
   //  console.log(data);
 
   let onScreen = true;
+  console.log(
+    `== Guard at ${data.guard.x}x${data.guard.y} (${data.guard.direction})`
+  );
   while (onScreen) {
     const result = searchNext(data);
     onScreen = result.onScreen;
@@ -253,12 +268,17 @@ function part1() {
       visited.add(cell);
     }
     console.log(
-      `>> Moved ${result.visited.length - 1} cells ${data.guard.direction}`
+      `>> Moved ${result.visited.length - 1} cells ${data.guard.direction}: ${
+        result.event
+      }`
     );
     if (result.next) {
       data.guard.direction = result.next.direction;
       data.guard.x = result.next.x;
       data.guard.y = result.next.y;
+      console.log(
+        `== Guard at ${data.guard.x}x${data.guard.y} (${data.guard.direction})`
+      );
     }
     //    console.log(result, onScreen);
     /*
@@ -298,6 +318,21 @@ function part1() {
     //    break;
     */
   }
+  let count = 0;
+  for (const cell of visited) {
+    ++count;
+    const [x, y] = cell.split("x").map((val) => Number(val));
+    const data = lines[y][x];
+    if (data === "#") {
+      console.error(`Obstacle at ${x}x${y} was visited`);
+      break;
+    }
+    lines[y] = lines[y].substring(0, x) + "X" + lines[y].substring(x + 1);
+  }
+  for (const line of lines) {
+    console.log(line);
+  }
+  console.log(`** Rendered ${count} visits`);
   console.log(`** Visited: ${visited.size}`);
 }
 
