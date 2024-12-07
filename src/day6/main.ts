@@ -251,11 +251,27 @@ function searchNext(data: any) {
   throw new Error("Now what?", data);
 }
 
+function renderData(visited: string[]) {
+  let count = 0;
+  for (const cell of visited) {
+    ++count;
+    const [x, y] = cell.split("x").map((val) => Number(val));
+    const data = lines[y][x];
+    if (data === "#") {
+      console.error(`Obstacle at ${x}x${y} was visited`);
+      break;
+    }
+    lines[y] = lines[y].substring(0, x) + "X" + lines[y].substring(x + 1);
+  }
+  for (const line of lines) {
+    console.log(line);
+  }
+  console.log(`** Rendered ${count} visits`);
+}
+
 function part1() {
   const visited = new Set<string>();
   const data = scanMap(lines);
-
-  //  console.log(data);
 
   let onScreen = true;
   console.log(
@@ -280,60 +296,47 @@ function part1() {
         `== Guard at ${data.guard.x}x${data.guard.y} (${data.guard.direction})`
       );
     }
-    //    console.log(result, onScreen);
-    /*
-    const row = data.obstacleRows.get(data.guard.y) ?? [];
-    const column = data.obstacleColumns.get(data.guard.x) ?? [];
-    if (
-      data.guard.direction === Direction.Up ||
-      data.guard.direction === Direction.Down
-    ) {
-      const result = searchColumn(column, data.height, data.guard);
-      console.log("Result: ", result);
-      onScreen = !result.next;
-      for (const cell of result.visited) {
-        visited.add(cell);
-      }
-      if (result.next) {
-        data.guard.direction = result.next.direction;
-        data.guard.x = result.next.x;
-        data.guard.y = result.next.y;
-      }
-    } else if (
-      data.guard.direction === Direction.Left ||
-      data.guard.direction === Direction.Right
-    ) {
-      const result = searchRow(row, data.width, data.guard);
-      console.log("Result: ", result);
-      onScreen = !result.next;
-      for (const cell of result.visited) {
-        visited.add(cell);
-      }
-      if (result.next) {
-        data.guard.direction = result.next.direction;
-        data.guard.x = result.next.x;
-        data.guard.y = result.next.y;
-      }
-    }
-    //    break;
-    */
   }
-  let count = 0;
-  for (const cell of visited) {
-    ++count;
-    const [x, y] = cell.split("x").map((val) => Number(val));
-    const data = lines[y][x];
-    if (data === "#") {
-      console.error(`Obstacle at ${x}x${y} was visited`);
-      break;
-    }
-    lines[y] = lines[y].substring(0, x) + "X" + lines[y].substring(x + 1);
-  }
-  for (const line of lines) {
-    console.log(line);
-  }
-  console.log(`** Rendered ${count} visits`);
+  renderData([...visited.keys()]);
   console.log(`** Visited: ${visited.size}`);
 }
 
-part1();
+function part2() {
+  const visited = new Map<string, Direction[]>();
+  const data = scanMap(lines);
+
+  let onScreen = true;
+  console.log(
+    `== Guard at ${data.guard.x}x${data.guard.y} (${data.guard.direction})`
+  );
+  while (onScreen) {
+    const result = searchNext(data);
+    onScreen = result.onScreen;
+    for (const cell of result.visited) {
+      const visit = visited.get(cell);
+      if (visit === undefined) {
+        visited.set(cell, [data.guard.direction]);
+      } else {
+        visit.push(data.guard.direction);
+      }
+    }
+    console.log(
+      `>> Moved ${result.visited.length - 1} cells ${data.guard.direction}: ${
+        result.event
+      }`
+    );
+    if (result.next) {
+      data.guard.direction = result.next.direction;
+      data.guard.x = result.next.x;
+      data.guard.y = result.next.y;
+      console.log(
+        `== Guard at ${data.guard.x}x${data.guard.y} (${data.guard.direction})`
+      );
+    }
+  }
+  renderData([...visited.keys()]);
+  console.log(`** Visited: ${visited.size}`);
+}
+
+//part1();
+part2();
